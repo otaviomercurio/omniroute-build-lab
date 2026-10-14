@@ -1,0 +1,95 @@
+name: Manual Windows x64 lab build
+
+on:
+  workflow_dispatch:
+    inputs:
+      approve_public_lab_draft:
+        description: "Owner approved this public repository, free standard runner, and a retrievable lab draft release"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-windows-lab-build
+  cancel-in-progress: false
+
+jobs:
+  build-and-retain:
+    if: github.event_name == 'workflow_dispatch' && inputs.approve_public_lab_draft && vars.PUBLIC_BUILD_ENABLED == 'true' && github.event.repository.private == false
+    runs-on: windows-latest
+    timeout-minutes: 90
+    # GitHub permissions are job-level. The token is only exposed to the final
+    # release step; checkout, npm, project code and helpers receive no GH_TOKEN.
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Fetch public build recipe without credentials or third-party actions
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:GITHUB_SERVER_URL -ne 'https://github.com') { throw 'GitHub.com standard runner required' }
+          if ($env:GITHUB_REPOSITORY -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Invalid repository identity' }
+          if ($env:GITHUB_SHA -notmatch '^[0-9a-f]{40}$') { throw 'Invalid workflow commit' }
+          $recipe = Join-Path $env:RUNNER_TEMP 'public-build-recipe'
+          if (Test-Path -LiteralPath $recipe) { throw 'Fresh recipe directory required' }
+          git init $recipe
+          if ($LASTEXITCODE) { throw 'git init failed' }
+          git -C $recipe remote add origin "https://github.com/$env:GITHUB_REPOSITORY.git"
+          if ($LASTEXITCODE) { throw 'git remote failed' }
+          git -C $recipe -c credential.helper= fetch --depth=1 origin $env:GITHUB_SHA
+          if ($LASTEXITCODE) { throw 'Public fetch failed' }
+          git -C $recipe -c core.autocrlf=false checkout --detach FETCH_HEAD
+          if ($LASTEXITCODE) { throw 'Checkout failed' }
+          $env:RECIPE_CHECKOUT = $recipe
+          @'
+          import hashlib, os, pathlib, re, stat, zipfile
+          root=pathlib.Path(os.environ['RECIPE_CHECKOUT'])
+          archive=root/'recipe-inputs.zip'
+          expected='97f59af23b365de4609bc4c6a35aac3e35ffd9791e7c5ef86fe5b7a594adfeab'
+          data=archive.read_bytes()
+          assert len(data)<2*1024*1024 and hashlib.sha256(data).hexdigest()==expected, 'Recipe ZIP hash mismatch'
+          allowed={'scripts/build.ps1','scripts/recipe.py','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch'}
+          dest=pathlib.Path(os.environ['RUNNER_TEMP'])/'omniroute-recipe-payload'
+          assert not dest.exists(), 'Fresh recipe payload directory required'
+          with zipfile.ZipFile(archive) as z:
+              infos=z.infolist()
+              assert len(infos)==len(allowed) and {i.filename for i in infos}==allowed
+              assert sum(i.file_size for i in infos)<2*1024*1024
+              assert all(not i.flag_bits&1 and not stat.S_ISLNK(i.external_attr>>16) for i in infos)
+              assert z.testzip() is None
+              dest.mkdir()
+              for i in infos:
+                  target=(dest/i.filename).resolve()
+                  assert target.is_relative_to(dest.resolve())
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  with target.open('xb') as f:f.write(z.read(i))
+          with open(os.environ['GITHUB_ENV'],'a',encoding='utf-8') as f:f.write('RECIPE_ROOT='+str(dest)+'\n')
+          print('Pinned recipe payload verified; no project code executed yet.')
+          '@ | python -
+          if ($LASTEXITCODE) { throw 'Recipe extraction failed' }
+
+      - name: Resource gates, pinned source, install, full build and package
+        run: |
+          & (Join-Path $env:RECIPE_ROOT 'scripts/build.ps1')
+
+      - name: Retain lab artifact in a new draft prerelease
+        # No upload-artifact, Actions cache, Packages, deploy or service startup.
+        # The manual controls above record a run within the owner's authorization.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = Join-Path $env:RUNNER_TEMP 'omniroute-lab-output'
+          $tag = "lab-nolog-c1e30b7-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          $assets = @('runtime-win-x64.zip','provenance.json','runtime-files.json','SHA256SUMS.txt') | ForEach-Object { Join-Path $out $_ }
+          foreach ($asset in $assets) {
+            if (!(Test-Path -LiteralPath $asset -PathType Leaf)) { throw 'Missing release asset' }
+            if ((Get-Item -LiteralPath $asset).Length -ge 2GB) { throw 'Release asset exceeds 2 GiB limit' }
+          }
+          gh release create $tag @assets --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --draft --prerelease --title "LAB ONLY: OmniRoute c1e30b7 NoLog/hardening Windows x64" --notes-file (Join-Path $env:RECIPE_ROOT 'LAB-RELEASE-NOTES.txt')
+          if ($LASTEXITCODE) { throw 'Draft release retention failed; artifact was not delivered' }

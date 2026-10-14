@@ -29,7 +29,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - name: Fetch public build recipe without credentials or third-party actions
+      - name: Fetch public text recipe without credentials and verify decoded ZIP
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:GITHUB_SERVER_URL -ne 'https://github.com') { throw 'GitHub.com standard runner required' }
@@ -47,16 +47,20 @@ jobs:
           if ($LASTEXITCODE) { throw 'Checkout failed' }
           $env:RECIPE_CHECKOUT = $recipe
           @'
-          import hashlib, os, pathlib, re, stat, zipfile
+          import base64, hashlib, io, os, pathlib, re, stat, zipfile
           root=pathlib.Path(os.environ['RECIPE_CHECKOUT'])
-          archive=root/'recipe-inputs.zip'
-          expected='6a77ad091dea40da7d9273adbf5a1c42704b35a3ea5443d1f2ad804a00ac1011'
-          data=archive.read_bytes()
+          archive=root/'recipe-inputs.zip.b64'
+          expected='3e15efeca0c2748b7d06d233b2beb3dabc0d45a752c505b5ecc57633be55f3f5'
+          assert archive.stat().st_size<3*1024*1024, 'Encoded recipe exceeds bound'
+          encoded=archive.read_bytes()
+          assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n', encoded), 'Canonical single-line Base64 plus LF required'
+          data=base64.b64decode(encoded[:-1], validate=True)
+          assert base64.b64encode(data)+b'\n'==encoded, 'Noncanonical Base64 rejected'
           assert len(data)<2*1024*1024 and hashlib.sha256(data).hexdigest()==expected, 'Recipe ZIP hash mismatch'
-          allowed={'scripts/build.ps1','scripts/recipe.py','scripts/verify-mitm-runtime.cjs','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch'}
+          allowed={'scripts/build.ps1','scripts/recipe.py','scripts/verify-mitm-runtime.cjs','scripts/memory-probe-preload.cjs','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch','patches/build-cache-only.patch'}
           dest=pathlib.Path(os.environ['RUNNER_TEMP'])/'omniroute-recipe-payload'
           assert not dest.exists(), 'Fresh recipe payload directory required'
-          with zipfile.ZipFile(archive) as z:
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
               infos=z.infolist()
               assert len(infos)==len(allowed) and {i.filename for i in infos}==allowed
               assert sum(i.file_size for i in infos)<2*1024*1024

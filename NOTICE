@@ -1,0 +1,29 @@
+This repository is an independent laboratory build recipe, not an official
+OmniRoute release and not a deployment configuration.
+
+OmniRoute upstream: https://github.com/diegosouzapw/OmniRoute
+Pinned commit: c1e30b7676975feb298b49eff6ff58923c04b89e
+Upstream license: MIT; Copyright (c) 2026 diegosouzapw.
+Patches include context derived from this upstream source. The source archive
+is downloaded only during an explicitly approved manual workflow run.
+
+The braces dependency is pinned to the public fork at
+https://github.com/Im-Fran/braces/tree/11568474fd2d330d4a56a3aba63f8f90030ba15e
+and receives an additional small AST guard. The fork and other third-party
+dependencies retain their own licenses. This recipe's MIT license does not
+relicense them or replace their existing notices.
+
+Generated runtime archives include the unmodified upstream LICENSE, this
+recipe's LICENSE and NOTICE, and the license files present in the staged
+runtime dependency tree. A complete third-party license/SBOM audit is not
+claimed by the build or its SHA256 manifest.
+
+Node.js is downloaded from nodejs.org at the pinned Windows x64 version and
+SHA256. Node.js is build tooling, not added to the runtime ZIP by this recipe.
+Its official checksum was obtained over HTTPS; GPG verification is not claimed.
+
+No application-specific frontend, customer artwork, account configuration,
+provider credentials, database, operational hostname or private source is
+part of this recipe. Draft release assets remain laboratory candidates until
+independently reviewed; no automatic deployment or public release publication
+is performed.

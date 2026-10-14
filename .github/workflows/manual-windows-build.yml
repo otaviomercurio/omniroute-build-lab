@@ -50,14 +50,14 @@ jobs:
           import base64, hashlib, io, os, pathlib, re, stat, zipfile
           root=pathlib.Path(os.environ['RECIPE_CHECKOUT'])
           archive=root/'recipe-inputs.zip.b64'
-          expected='4f38b2d585ae821f5680a0d63d6d8870666a81b241f21bcd545a01c9e2fda3ed'
+          expected='376986053031b1f49cba85cc6700683da067b7f044086ecec1bb8185781599d2'
           assert archive.stat().st_size<3*1024*1024, 'Encoded recipe exceeds bound'
           encoded=archive.read_bytes()
           assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n', encoded), 'Canonical single-line Base64 plus LF required'
           data=base64.b64decode(encoded[:-1], validate=True)
           assert base64.b64encode(data)+b'\n'==encoded, 'Noncanonical Base64 rejected'
           assert len(data)<2*1024*1024 and hashlib.sha256(data).hexdigest()==expected, 'Recipe ZIP hash mismatch'
-          allowed={'scripts/build.ps1','scripts/recipe.py','scripts/verify-mitm-runtime.cjs','scripts/memory-probe-preload.cjs','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch','patches/build-cache-only.patch'}
+          allowed={'scripts/build.ps1','scripts/recipe.py','scripts/verify-mitm-runtime.cjs','scripts/stage-selfsigned-closure.cjs','scripts/memory-probe-preload.cjs','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch','patches/build-cache-only.patch'}
           dest=pathlib.Path(os.environ['RUNNER_TEMP'])/'omniroute-recipe-payload'
           assert not dest.exists(), 'Fresh recipe payload directory required'
           with zipfile.ZipFile(io.BytesIO(data)) as z:

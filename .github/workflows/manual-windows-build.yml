@@ -50,7 +50,7 @@ jobs:
           import hashlib, os, pathlib, re, stat, zipfile
           root=pathlib.Path(os.environ['RECIPE_CHECKOUT'])
           archive=root/'recipe-inputs.zip'
-          expected='97f59af23b365de4609bc4c6a35aac3e35ffd9791e7c5ef86fe5b7a594adfeab'
+          expected='1a08fd0da8f7db2ed9b202c3d1c3d5838a980b647ce4d145ab547e0d4a97552b'
           data=archive.read_bytes()
           assert len(data)<2*1024*1024 and hashlib.sha256(data).hexdigest()==expected, 'Recipe ZIP hash mismatch'
           allowed={'scripts/build.ps1','scripts/recipe.py','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch'}

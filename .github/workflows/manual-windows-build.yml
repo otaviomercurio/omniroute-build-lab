@@ -50,10 +50,10 @@ jobs:
           import hashlib, os, pathlib, re, stat, zipfile
           root=pathlib.Path(os.environ['RECIPE_CHECKOUT'])
           archive=root/'recipe-inputs.zip'
-          expected='1a08fd0da8f7db2ed9b202c3d1c3d5838a980b647ce4d145ab547e0d4a97552b'
+          expected='6a77ad091dea40da7d9273adbf5a1c42704b35a3ea5443d1f2ad804a00ac1011'
           data=archive.read_bytes()
           assert len(data)<2*1024*1024 and hashlib.sha256(data).hexdigest()==expected, 'Recipe ZIP hash mismatch'
-          allowed={'scripts/build.ps1','scripts/recipe.py','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch'}
+          allowed={'scripts/build.ps1','scripts/recipe.py','scripts/verify-mitm-runtime.cjs','build-inputs.json','LAB-RELEASE-NOTES.txt','LICENSE','NOTICE','patches/correcao-nolog.patch','patches/package-hardening.patch','patches/package-lock.minimal.patch','patches/braces-reference-versus-fork.patch'}
           dest=pathlib.Path(os.environ['RUNNER_TEMP'])/'omniroute-recipe-payload'
           assert not dest.exists(), 'Fresh recipe payload directory required'
           with zipfile.ZipFile(archive) as z:

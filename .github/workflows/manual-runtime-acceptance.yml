@@ -48,7 +48,7 @@ jobs:
           import base64,hashlib,io,os,pathlib,re,stat,zipfile
           scratch=pathlib.Path(os.environ['RUNNER_TEMP'])
           archive=scratch/'runtime-acceptance-checkout'/'runtime-acceptance-recipe.zip.b64'
-          expected='6a15f1ecc3d04d195d25d771eb7cde7bccbd82995c5743ddbfb6158c7296103a'
+          expected='9cc163ced210242024e4678b244acfc21865b9bb4582ad788bb05c83e4dff388'
           assert archive.stat().st_size<3*1024*1024, 'Encoded recipe exceeds bound'
           encoded=archive.read_bytes()
           assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n', encoded), 'Canonical single-line Base64 plus LF required'
@@ -145,7 +145,7 @@ jobs:
           import base64,hashlib,io,os,pathlib,re,zipfile
           scratch=pathlib.Path(os.environ['RUNNER_TEMP']); root=pathlib.Path(os.environ['ACCEPTANCE_RECIPE'])
           archive=scratch/'runtime-acceptance-checkout'/'runtime-acceptance-recipe.zip.b64'
-          expected='6a15f1ecc3d04d195d25d771eb7cde7bccbd82995c5743ddbfb6158c7296103a'
+          expected='9cc163ced210242024e4678b244acfc21865b9bb4582ad788bb05c83e4dff388'
           assert archive.stat().st_size<3*1024*1024, 'Encoded recipe exceeds bound'
           encoded=archive.read_bytes()
           assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n', encoded), 'Canonical single-line Base64 plus LF required'

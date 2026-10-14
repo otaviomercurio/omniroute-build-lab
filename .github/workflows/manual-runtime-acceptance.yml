@@ -21,6 +21,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.approve_synthetic_runtime_draft && github.event.repository.private == false
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
     permissions:
       contents: write
     defaults:
@@ -46,7 +48,7 @@ jobs:
           import base64,hashlib,io,os,pathlib,re,stat,zipfile
           scratch=pathlib.Path(os.environ['RUNNER_TEMP'])
           archive=scratch/'runtime-acceptance-checkout'/'runtime-acceptance-recipe.zip.b64'
-          expected='6679929d7a1251aae70d52fba2be04329a82e7ce6990583ac32417bc145d8a9c'
+          expected='fe44962f63fa7c86ab141414cbed2dd3a6c5e22830044505dafce785073093fb'
           assert archive.stat().st_size<3*1024*1024, 'Encoded recipe exceeds bound'
           encoded=archive.read_bytes()
           assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n', encoded), 'Canonical single-line Base64 plus LF required'
@@ -143,7 +145,7 @@ jobs:
           import base64,hashlib,io,os,pathlib,re,zipfile
           scratch=pathlib.Path(os.environ['RUNNER_TEMP']); root=pathlib.Path(os.environ['ACCEPTANCE_RECIPE'])
           archive=scratch/'runtime-acceptance-checkout'/'runtime-acceptance-recipe.zip.b64'
-          expected='6679929d7a1251aae70d52fba2be04329a82e7ce6990583ac32417bc145d8a9c'
+          expected='fe44962f63fa7c86ab141414cbed2dd3a6c5e22830044505dafce785073093fb'
           assert archive.stat().st_size<3*1024*1024, 'Encoded recipe exceeds bound'
           encoded=archive.read_bytes()
           assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n', encoded), 'Canonical single-line Base64 plus LF required'

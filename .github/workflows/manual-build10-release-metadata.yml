@@ -1,0 +1,98 @@
+name: Manual Build10 draft metadata (read only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      approve_readonly_metadata:
+        description: "Read only the pinned Build10 run/draft metadata; no asset download or runtime"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-build10-draft-metadata
+  cancel-in-progress: false
+
+jobs:
+  read-metadata:
+    if: github.event_name == 'workflow_dispatch' && inputs.approve_readonly_metadata && vars.PUBLIC_BUILD_ENABLED == 'true' && github.event.repository.private == false && github.repository == 'otaviomercurio/omniroute-build-lab'
+    runs-on: windows-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Validate exact run and draft; summarize only allowlisted metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          try {
+            $repo = 'otaviomercurio/omniroute-build-lab'
+            $buildRun = '38796345930'
+            $attempt = '1'
+            $commit = '2b1821bdd573340f72cfc357afc6830b7d8a17cd'
+            $tag = 'lab-nolog-c1e30b7-38796345930-1'
+            if ($env:GITHUB_SERVER_URL -cne 'https://github.com' -or $env:GITHUB_API_URL -cne 'https://api.github.com' -or $env:GITHUB_REPOSITORY -cne $repo -or $env:GITHUB_EVENT_NAME -cne 'workflow_dispatch' -or !$env:GH_TOKEN) { throw 'SCOPE_REJECTED' }
+            $event = Get-Content -LiteralPath $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+            if ($event.repository.private -isnot [bool] -or $event.repository.private -ne $false -or $event.repository.full_name -cne $repo) { throw 'PUBLIC_REPOSITORY_REQUIRED' }
+            $publicHeaders = @{Accept='application/vnd.github+json'; 'X-GitHub-Api-Version'='2022-11-28'; 'User-Agent'='Build10-ReadOnly-Metadata'}
+            $privateHeaders = @{Accept='application/vnd.github+json'; 'X-GitHub-Api-Version'='2022-11-28'; 'User-Agent'='Build10-ReadOnly-Metadata'; Authorization=('Bearer ' + $env:GH_TOKEN)}
+            $api = 'https://api.github.com/repos/' + $repo
+            # Public run metadata needs no additional token permission (no actions:read).
+            $run = Invoke-RestMethod -Method Get -Uri "$api/actions/runs/$buildRun/attempts/$attempt" -Headers $publicHeaders -MaximumRedirection 0 -TimeoutSec 30
+            if ([string]$run.id -cne $buildRun -or [string]$run.run_attempt -cne $attempt -or $run.head_sha -cne $commit -or $run.status -cne 'completed' -or $run.conclusion -cne 'success' -or $run.event -cne 'workflow_dispatch' -or $run.repository.full_name -cne $repo -or $run.repository.private -isnot [bool] -or $run.repository.private -ne $false -or $run.head_repository.full_name -cne $repo) { throw 'EXACT_SUCCESSFUL_BUILD_REQUIRED' }
+            # The normal authenticated release-list API can expose draft metadata.
+            # Bounded list, exact tag only: no latest alias or fallback to another release.
+            $releaseResponse = Invoke-RestMethod -Method Get -Uri "$api/releases?per_page=100&page=1" -Headers $privateHeaders -MaximumRedirection 0 -TimeoutSec 30
+            $releases = @($releaseResponse)
+            $releaseMatches = @($releases | Where-Object { $_.tag_name -ceq $tag })
+            if ($releaseMatches.Count -ne 1) { throw 'EXACT_DRAFT_NOT_VISIBLE_WITH_READ_PERMISSION' }
+            [long]$releaseId = 0
+            if (![long]::TryParse([string]$releaseMatches[0].id, [ref]$releaseId) -or $releaseId -le 0) { throw 'RELEASE_ID_INVALID' }
+            $release = Invoke-RestMethod -Method Get -Uri "$api/releases/$releaseId" -Headers $privateHeaders -MaximumRedirection 0 -TimeoutSec 30
+            if ([string]$release.id -cne [string]$releaseId -or $release.tag_name -cne $tag -or $release.target_commitish -cne $commit -or $release.draft -isnot [bool] -or !$release.draft -or $release.prerelease -isnot [bool] -or !$release.prerelease) { throw 'EXACT_DRAFT_IDENTITY_REQUIRED' }
+            $expected = [ordered]@{
+              'runtime-win-x64.zip' = @{sha='15afbf24f9b8d9582bd0a75c49ea14ece6acf0515b6a45d5c7e0d7150a1fd798'; max=2147483647L}
+              'runtime-files.json' = @{sha='9a1a42b2f00841151caf411047d3459935e3fb6c0a4da948b37c66de80841045'; max=33554432L}
+              'provenance.json' = @{sha='cd5022aff8d35fde92a13e047ee63cf2fecfa3442048e2a1926660c37cc6a3f3'; max=2097152L}
+              'SHA256SUMS.txt' = @{sha='defd9e764eb72a814b9ff3d381ba7155a1864033b776eefdcac018351fd51058'; max=4096L}
+            }
+            $assets = @($release.assets)
+            if ($assets.Count -ne 4) { throw 'EXACT_FOUR_ASSETS_REQUIRED' }
+            $seenIds = [Collections.Generic.HashSet[long]]::new()
+            $rows = [Collections.Generic.List[string]]::new()
+            foreach ($name in $expected.Keys) {
+              $found = @($assets | Where-Object { $_.name -ceq $name })
+              if ($found.Count -ne 1) { throw 'EXACT_UNIQUE_ASSET_NAME_REQUIRED' }
+              $asset = $found[0]
+              [long]$assetId = 0; [long]$size = 0
+              if (![long]::TryParse([string]$asset.id, [ref]$assetId) -or $assetId -le 0 -or !$seenIds.Add($assetId) -or ![long]::TryParse([string]$asset.size, [ref]$size) -or $size -le 0 -or $size -gt $expected[$name].max -or $asset.state -cne 'uploaded' -or $asset.digest -isnot [string] -or $asset.digest -cne ('sha256:' + $expected[$name].sha)) { throw 'ASSET_METADATA_PIN_MISMATCH' }
+              $rows.Add('| ' + $name + ' | ' + $assetId + ' | ' + $size + ' | ' + $asset.digest + ' |')
+            }
+            # Write only validated scalar metadata; never raw JSON, URLs, tokens or asset contents.
+            $summary = @(
+              'Build10 draft metadata — API read only; asset bytes not downloaded or verified.',
+              '',
+              '| Field | Value |',
+              '| --- | --- |',
+              ('| Repository | ' + $repo + ' |'),
+              ('| Run / attempt | ' + $buildRun + ' / ' + $attempt + ' |'),
+              ('| Release ID | ' + $releaseId + ' |'),
+              ('| Tag | ' + $tag + ' |'),
+              ('| Target commit | ' + $commit + ' |'),
+              '| Draft / prerelease | true / true |',
+              '',
+              '| Asset | Asset ID | Bytes | API digest |',
+              '| --- | --- | --- | --- |'
+            ) + $rows.ToArray()
+            Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value ($summary -join "`n") -Encoding utf8
+          } catch {
+            # Fail closed without exposing API bodies or exception payloads.
+            Write-Error 'BUILD10_METADATA_READ_BLOCKED_NO_RAW_RESPONSE' -ErrorAction Continue
+            exit 1
+          }

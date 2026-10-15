@@ -32,9 +32,9 @@ hashes and explicitly leave behavioral acceptance pending.
 
 Five active files: `.github/workflows/manual-windows-build.yml`,
 `recipe-inputs.zip.b64`, `README.md`, `LICENSE`, and `NOTICE`.
-The Base64 file is 58,917 bytes: one canonical ASCII line plus LF.
-It decodes to 44,187 bytes, 17 allowlisted entries, SHA256
-`16ba04a677bfc5bcf65a290367dbb52fdd6f6ca700e18880d1cc2fd9229a9f7d`. The workflow verifies the decoded hash, exact entry set,
+The Base64 file is 62,749 bytes: one canonical ASCII line plus LF.
+It decodes to 47,059 bytes, 18 allowlisted entries, SHA256
+`8fe5ee475699af2a5c449aee24b230e283119838c93620547f9a4e1dab238a3f`. The workflow verifies the decoded hash, exact entry set,
 CRC, extraction paths and bounds before running any helper. No private source,
 site files, images, database, credentials or production configuration is present.
 An older binary ZIP in the repository is inactive and is not used as a fallback.
@@ -75,3 +75,7 @@ The original auxiliary MITM TypeScript warning remains visible; this recipe
 verifies its actual standalone consumer rather than substituting a stub.
 
 Official runner reference: https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+
+## Custom image edit cancellation
+
+This candidate adds a sixth reviewed patch after the existing source patches. It forwards the client AbortSignal into the custom image edit request and stops canceled combo execution before another connection is resolved or dispatched. Existing120s timeout, model selection, NoLog and build gates remain. Eleven source-level tests passed with real loopback sockets; compiled HTTP disconnect acceptance remains pending. This is not a Site deployment or a change to any live provider.

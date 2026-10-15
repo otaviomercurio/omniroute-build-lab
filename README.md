@@ -1,8 +1,10 @@
 # Manual Windows x64 laboratory build
 
 This public recipe compiles OmniRoute commit `c1e30b7676975feb298b49eff6ff58923c04b89e`
-with the existing five reviewed patches: NoLog, pinned dependency hardening,
-minimal lock changes, the braces AST guard, and disposable Webpack-cache control.
+with six source patches: NoLog, pinned dependency hardening, minimal lock changes,
+disposable Webpack-cache control, custom image cancellation, and native image
+streaming R2. The installed braces AST guard and two exact approved Playwright
+runtime backports are separate, for nine patch files in the payload.
 The full dashboard, instrumentation, models and application timeouts are retained.
 This is a laboratory candidate, not an upstream release or a deployment.
 
@@ -32,9 +34,9 @@ hashes and explicitly leave behavioral acceptance pending.
 
 Five active files: `.github/workflows/manual-windows-build.yml`,
 `recipe-inputs.zip.b64`, `README.md`, `LICENSE`, and `NOTICE`.
-The Base64 file is 62,749 bytes: one canonical ASCII line plus LF.
-It decodes to 47,059 bytes, 18 allowlisted entries, SHA256
-`8fe5ee475699af2a5c449aee24b230e283119838c93620547f9a4e1dab238a3f`. The workflow verifies the decoded hash, exact entry set,
+The Base64 file is 75,329 bytes: one canonical ASCII line plus LF.
+It decodes to 56,495 bytes, 21 allowlisted entries, SHA256
+`1eb99c63d2ba33a5a80c106d7ad7cc9698a26afeb01948ed55214c947c4facff`. The workflow verifies the decoded hash, exact entry set,
 CRC, extraction paths and bounds before running any helper. No private source,
 site files, images, database, credentials or production configuration is present.
 An older binary ZIP in the repository is inactive and is not used as a fallback.
@@ -78,4 +80,10 @@ Official runner reference: https://docs.github.com/en/actions/reference/runners/
 
 ## Custom image edit cancellation
 
-This candidate adds a sixth reviewed patch after the existing source patches. It forwards the client AbortSignal into the custom image edit request and stops canceled combo execution before another connection is resolved or dispatched. Existing120s timeout, model selection, NoLog and build gates remain. Eleven source-level tests passed with real loopback sockets; compiled HTTP disconnect acceptance remains pending. This is not a Site deployment or a change to any live provider.
+The reviewed cancellation patch follows the earlier source patches. It forwards the client AbortSignal into the custom image edit request and stops canceled combo execution before another connection is resolved or dispatched. Existing120s timeout, model selection, NoLog and build gates remain. Eleven source-level tests passed with real loopback sockets; compiled HTTP disconnect acceptance remains pending. This is not a Site deployment or a change to any live provider.
+
+## Native image stream R2 proposal
+
+The sixth source patch adds the opt-in native image stream on top of Build8 cancellation. The five previous source patches, installed braces guard, dependency closures and sanitizer checks remain. Two exact approved Playwright vendor backports are preserved during final packaging with pre/postimage gates. Unknown vendor bytes stop the job; the recipe never copies a local runtime wholesale.
+
+The stream patch is 699756da4a7c8acb6d162c9aca0f46e842e21b609769681ab1367f506e8023a5. Its source manifest is eb9da322fc42677798453c04890490d36e67d098d4a4ac8f4457b2a61006644a. The full build and runtime acceptance are still pending; no increase in image limits, provider invocation, production update or new paid resource is part of this recipe.

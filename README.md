@@ -1,10 +1,10 @@
 # Manual Windows x64 laboratory build
 
 This public recipe compiles OmniRoute commit `c1e30b7676975feb298b49eff6ff58923c04b89e`
-with six source patches: NoLog, pinned dependency hardening, minimal lock changes,
+with seven source patches: NoLog, pinned dependency hardening, minimal lock changes,
 disposable Webpack-cache control, custom image cancellation, and native image
-streaming R2. The installed braces AST guard and two exact approved Playwright
-runtime backports are separate, for nine patch files in the payload.
+streaming R2, and the dedicated Artes Stage1 profile. The installed braces AST guard and two exact approved Playwright
+runtime backports are separate, for ten patch files in the payload.
 The full dashboard, instrumentation, models and application timeouts are retained.
 This is a laboratory candidate, not an upstream release or a deployment.
 
@@ -34,9 +34,9 @@ hashes and explicitly leave behavioral acceptance pending.
 
 Five active files: `.github/workflows/manual-windows-build.yml`,
 `recipe-inputs.zip.b64`, `README.md`, `LICENSE`, and `NOTICE`.
-The Base64 file is 75,329 bytes: one canonical ASCII line plus LF.
-It decodes to 56,495 bytes, 21 allowlisted entries, SHA256
-`1eb99c63d2ba33a5a80c106d7ad7cc9698a26afeb01948ed55214c947c4facff`. The workflow verifies the decoded hash, exact entry set,
+The Base64 file is 81,041 bytes: one canonical ASCII line plus LF.
+It decodes to 60,778 bytes, 22 allowlisted entries, SHA256
+`bee7318c4a03d6e9af72c31b31e4273f37cfd45d0ab94b60e5f59f9ea814c37b`. The workflow verifies the decoded hash, exact entry set,
 CRC, extraction paths and bounds before running any helper. No private source,
 site files, images, database, credentials or production configuration is present.
 An older binary ZIP in the repository is inactive and is not used as a fallback.
@@ -86,4 +86,12 @@ The reviewed cancellation patch follows the earlier source patches. It forwards 
 
 The sixth source patch adds the opt-in native image stream on top of Build8 cancellation. The five previous source patches, installed braces guard, dependency closures and sanitizer checks remain. Two exact approved Playwright vendor backports are preserved during final packaging with pre/postimage gates. Unknown vendor bytes stop the job; the recipe never copies a local runtime wholesale.
 
-The stream patch is 699756da4a7c8acb6d162c9aca0f46e842e21b609769681ab1367f506e8023a5. Its source manifest is eb9da322fc42677798453c04890490d36e67d098d4a4ac8f4457b2a61006644a. The full build and runtime acceptance are still pending; no increase in image limits, provider invocation, production update or new paid resource is part of this recipe.
+The stream patch is 699756da4a7c8acb6d162c9aca0f46e842e21b609769681ab1367f506e8023a5. Its source manifest is eb9da322fc42677798453c04890490d36e67d098d4a4ac8f4457b2a61006644a. Those original R2 limits remain unchanged for the legacy native-v1 alias. The separate Stage1 profile below requires a new build and its own compiled acceptance; no provider invocation, production update or new paid resource is performed by this recipe.
+
+## Dedicated Artes Stage1 proposal
+
+The seventh source stage applies `native-artes-stage1.patch` after the exact Build9 stream sources. Four Build9 preimages and all five final stream-related sources are byte/hash gated. The cumulative nine changed upstream sources remain in `build-inputs.json`; no earlier patch or vendor repair is replaced.
+
+Only the exact alias `fernandes-native-images/realesrgan-x4plus-4x-png-artes-large-v1`, with restricted model access and NoLog, selects the new 128 MiB output envelope. The old native-v1 alias remains 16 MiB. The image model, x4 scale and 120 s deadline stay unchanged; this build neither changes Native/Site limits nor provisions connections or keys.
+
+Stage1 patch SHA256: `1f430d8fb538986f5ec1bd74f2ff278976fcd7d30d40a02c929683f5e982e3b1`. Full source manifest SHA256: `8a6997bff54717032cc1b46c17a1256901e040423e8344d007b451f505e26ed6`. Candidate manifest SHA256: `8cae3a51504be1435508bba8c0499d453d2d938cd363710c1c79d6e7f4653598`. Nine focused tests passed before the final built-in-provider rejection guard; the final source has a static check only. The final focused suite, compiled HTTP acceptance and coordinated Site/Native capacity validation remain pending. Do not use prior Build9 acceptance as proof of Stage1 acceptance. The existing acceptance workflows and their payloads are preserved byte for byte.

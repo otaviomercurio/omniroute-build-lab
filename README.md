@@ -1,10 +1,11 @@
 # Manual Windows x64 laboratory build
 
 This public recipe compiles OmniRoute commit `c1e30b7676975feb298b49eff6ff58923c04b89e`
-with eight source patches: NoLog, pinned dependency hardening, minimal lock changes,
+with nine source patches: NoLog, pinned dependency hardening, minimal lock changes,
 disposable Webpack-cache control, custom image cancellation, and native image
-streaming R2, the dedicated Artes Stage1 profile, and disabled asynchronous image jobs. The installed braces AST guard and two exact approved Playwright
-runtime backports are separate, for eleven patch files in the payload.
+streaming R2, the dedicated Artes Stage1 profile, disabled asynchronous image jobs,
+and the Jobs stream boundary. The installed braces AST guard and two exact approved Playwright
+runtime backports are separate, for twelve patch files in the payload.
 The full dashboard, instrumentation, models and application timeouts are retained.
 This is a laboratory candidate, not an upstream release or a deployment.
 
@@ -34,9 +35,9 @@ hashes and explicitly leave behavioral acceptance pending.
 
 Five active files: `.github/workflows/manual-windows-build.yml`,
 `recipe-inputs.zip.b64`, `README.md`, `LICENSE`, and `NOTICE`.
-The Base64 file is 92,717 bytes: one canonical ASCII line plus LF.
-It decodes to 69,536 bytes, 23 allowlisted entries, SHA256
-`9d92cf53cd7d93d28e07423f3bd1b8d9255ee3b2bcb41187713f5717dbff6ea9`. The workflow verifies the decoded hash, exact entry set,
+The Base64 file is 99,297 bytes: one canonical ASCII line plus LF.
+It decodes to 74,471 bytes, 24 allowlisted entries, SHA256
+`d6ac46b4bcd1f837b89d846f80d94ecd64ce41566d4dd13f68a90a1f23254043`. The workflow verifies the decoded hash, exact entry set,
 CRC, extraction paths and bounds before running any helper. No private source,
 site files, images, database, credentials or production configuration is present.
 An older binary ZIP in the repository is inactive and is not used as a fallback.
@@ -88,7 +89,7 @@ The sixth source patch adds the opt-in native image stream on top of Build8 canc
 
 The stream patch is 699756da4a7c8acb6d162c9aca0f46e842e21b609769681ab1367f506e8023a5. Its source manifest is eb9da322fc42677798453c04890490d36e67d098d4a4ac8f4457b2a61006644a. Those original R2 limits remain unchanged for the legacy native-v1 alias. The separate Stage1 profile below requires a new build and its own compiled acceptance; no provider invocation, production update or new paid resource is performed by this recipe.
 
-## Dedicated Artes Stage1 proposal
+## Dedicated Artes Stage1 source history
 
 The seventh source stage applies `native-artes-stage1.patch` after the exact Build9 stream sources. Four Build9 preimages and all five final stream-related sources are byte/hash gated. The cumulative nine changed upstream sources remain in `build-inputs.json`; no earlier patch or vendor repair is replaced.
 
@@ -96,10 +97,24 @@ Only the exact alias `fernandes-native-images/realesrgan-x4plus-4x-png-artes-lar
 
 Stage1 patch SHA256: `1f430d8fb538986f5ec1bd74f2ff278976fcd7d30d40a02c929683f5e982e3b1`. Full source manifest SHA256: `8a6997bff54717032cc1b46c17a1256901e040423e8344d007b451f505e26ed6`. Candidate manifest SHA256: `8cae3a51504be1435508bba8c0499d453d2d938cd363710c1c79d6e7f4653598`. Nine focused tests passed before the final built-in-provider rejection guard; the final source has a static check only. The final focused suite, compiled HTTP acceptance and coordinated Site/Native capacity validation remain pending. Do not use prior Build9 acceptance as proof of Stage1 acceptance. The existing acceptance workflows and their payloads are preserved byte for byte.
 
-## Disabled asynchronous image jobs Stage2
+## Disabled asynchronous image jobs Stage2 source history
 
-The eighth source stage adds exactly three new files over the verified Build10 recipe commit `2b1821bdd573340f72cfc357afc6830b7d8a17cd`: the pure jobs handler, its TypeScript declarations and the Next optional catch-all route. Each path must be absent before applying the patch. Their final bytes/hashes are verified together with every unchanged Stage1 source and previous dependency/vendor gate. The existing synchronous routes and their limits remain unchanged.
+The eighth source stage adds exactly three new files over the verified Build10 recipe commit `2b1821bdd573340f72cfc357afc6830b7d8a17cd`: the pure jobs handler, its TypeScript declarations and the Next optional catch-all route. Each path must be absent before applying the patch. Their intermediate bytes/hashes at this stage are verified together with every unchanged Stage1 source and previous dependency/vendor gate. The existing synchronous routes and their limits remain unchanged.
 
 The feature stays disabled unless separately configured with an explicit allowed existing key, one existing provider connection and the existing restricted Images model/NoLog policy. This build creates no key, model, connection or environment file. Only the new source patch is included; local test images, credentials, logs, Site sources and runtime data are absent.
 
 The source candidate passed pure transport tests and a synthetic loopback composition using the actual Build10 NextRequest adapter. That does not prove compiled-route behavior or maximum capacity. The recipe now requires the compiled jobs route manifest entry and nonempty output file, and records its hash. Compiled authenticated HTTP acceptance, the public proxy and any larger real inference remain separate gates. No production capacity guarantee or feature activation follows from a green build.
+
+## Build12 Jobs stream boundary
+
+
+Build12 source boundary (prepared separately; not deployment approval)
+The three-file Jobs stream boundary retains the same authz admission pipeline
+inside the Jobs route and excludes only that namespace from proxy matching.
+All 11 previous patches and feature-default/limits/quality/deadlines remain.
+Original nativeImageJobsStage2 provenance records its intermediate route hash;
+jobsStreamBoundary and changedSources record the final route/proxy/pipeline.
+Output gates pin the newly compiled route, Node middleware and both manifests,
+compare all matchers and require the continuation marker. These static gates
+do not prove authenticated HTTP, alias rewrites or public headers. Compiled
+acceptance (including unchanged early replay deadline) remains PENDING.

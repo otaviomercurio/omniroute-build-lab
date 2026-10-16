@@ -48,7 +48,7 @@ jobs:
           @'
           import base64,hashlib,io,os,pathlib,re,stat,zipfile
           scratch=pathlib.Path(os.environ['RUNNER_TEMP']); archive=scratch/'stream-acceptance-checkout/stage2-jobs-acceptance-recipe.zip.b64'
-          expected='8066ab256973388ce93f117bc9a3e018c316ec9246fb05c78eb73e5f19ff6e64'; allowed=set(['LAB-NOTES.txt', 'approved-inputs.json', 'harness/Invoke-JobsAcceptance.ps1', 'harness/cleanup-owned.ps1', 'harness/native-fixture.mjs', 'harness/oracles.mjs', 'harness/probe.mjs', 'harness/run-jobs-acceptance.mjs', 'harness/verify-inputs.py', 'review-record.json', 'scripts/collector.py', 'scripts/contract.py', 'scripts/node-toolchain.py', 'workflow.template.yml'])
+          expected='a5b43dfa2dc948893c123f48c3e40e64d5a69cdbd2db37d3fa6af45d9f3f5a35'; allowed=set(['LAB-NOTES.txt', 'approved-inputs.json', 'harness/Invoke-JobsAcceptance.ps1', 'harness/cleanup-owned.ps1', 'harness/native-fixture.mjs', 'harness/oracles.mjs', 'harness/probe.mjs', 'harness/run-jobs-acceptance.mjs', 'harness/verify-inputs.py', 'review-record.json', 'scripts/collector.py', 'scripts/contract.py', 'scripts/node-toolchain.py', 'workflow.template.yml'])
           assert archive.is_file() and archive.stat().st_size<3*1024*1024
           for p in (archive,*archive.parents): assert not p.is_symlink() and not getattr(p.lstat(),'st_file_attributes',0)&0x400
           encoded=archive.read_bytes(); assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n',encoded)
@@ -166,7 +166,7 @@ jobs:
           import base64,hashlib,io,os,pathlib,re,zipfile
           scratch=pathlib.Path(os.environ['RUNNER_TEMP']); root=pathlib.Path(os.environ['STREAM_RECIPE'])
           archive=scratch/'stream-acceptance-checkout/stage2-jobs-acceptance-recipe.zip.b64'
-          expected='8066ab256973388ce93f117bc9a3e018c316ec9246fb05c78eb73e5f19ff6e64'; allowed=set(['LAB-NOTES.txt', 'approved-inputs.json', 'harness/Invoke-JobsAcceptance.ps1', 'harness/cleanup-owned.ps1', 'harness/native-fixture.mjs', 'harness/oracles.mjs', 'harness/probe.mjs', 'harness/run-jobs-acceptance.mjs', 'harness/verify-inputs.py', 'review-record.json', 'scripts/collector.py', 'scripts/contract.py', 'scripts/node-toolchain.py', 'workflow.template.yml'])
+          expected='a5b43dfa2dc948893c123f48c3e40e64d5a69cdbd2db37d3fa6af45d9f3f5a35'; allowed=set(['LAB-NOTES.txt', 'approved-inputs.json', 'harness/Invoke-JobsAcceptance.ps1', 'harness/cleanup-owned.ps1', 'harness/native-fixture.mjs', 'harness/oracles.mjs', 'harness/probe.mjs', 'harness/run-jobs-acceptance.mjs', 'harness/verify-inputs.py', 'review-record.json', 'scripts/collector.py', 'scripts/contract.py', 'scripts/node-toolchain.py', 'workflow.template.yml'])
           assert archive.is_file() and archive.stat().st_size<3*1024*1024
           for p in (archive,*archive.parents): assert not p.is_symlink() and not getattr(p.lstat(),'st_file_attributes',0)&0x400
           encoded=archive.read_bytes(); assert re.fullmatch(rb'[A-Za-z0-9+/]+={0,2}\n',encoded)
